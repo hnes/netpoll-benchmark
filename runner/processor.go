@@ -18,6 +18,7 @@ package runner
 
 import (
 	"fmt"
+	"hash/crc32"
 	"strings"
 
 	"github.com/cloudwego/netpoll-benchmark/runner/perf"
@@ -30,7 +31,15 @@ const (
 	ActionReport  = "report"
 )
 
+var glCrc32bs = make([]byte, 1024*256*10)
+
 func ProcessRequest(report *perf.Recorder, req *Message) (resp *Message) {
+	fp := func() {
+		for range make([]struct{}, 1) {
+			_ = crc32.ChecksumIEEE(glCrc32bs)
+		}
+	}
+	defer fp()
 	if len(req.Message) < MaxActionSize {
 		switch req.Message {
 		case ActionBegin:
